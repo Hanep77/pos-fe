@@ -16,6 +16,8 @@ import TambahBarang from './Pages/Dashboard/TambahBarang'
 import EditBarang from './Pages/Dashboard/EditBarang'
 import TambahUser from './Pages/Dashboard/TambahUser'
 import EditUser from './Pages/Dashboard/EditUser'
+import TambahPelanggan from './Pages/Dashboard/TambahPelanggan'
+import EditPelanggan from './Pages/Dashboard/EditPelanggan'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -31,6 +33,8 @@ createRoot(document.getElementById('root')!).render(
             <Route path='/dashboard/users/tambah' element={<TambahUser />} />
             <Route path='/dashboard/users/edit/:id' element={<EditUser />} />
             <Route path='/dashboard/pelanggan' element={<KelolaPelanggan />} />
+            <Route path='/dashboard/pelanggan/tambah' element={<TambahPelanggan />} />
+            <Route path='/dashboard/pelanggan/edit/:id' element={<EditPelanggan />} />
             <Route path='/dashboard/laporan-penjualan' element={<LaporanPenjualan />} />
             <Route path='/kasir' element={<Cashier />} />
           </Route>

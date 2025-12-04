@@ -44,7 +44,7 @@ export default function AdminDashboard() {
       setTotalUsers(totalUsers.data.data)
 
       const totalPelanggan = await axiosPrivate.get("/customers/count");
-      setTotalUsers(totalPelanggan.data.data)
+      setTotalPelanggan(totalPelanggan.data.data)
     }
     getData()
   })
