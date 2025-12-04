@@ -10,38 +10,18 @@ import { LayoutDashboard, SearchIcon, ShoppingCart } from "lucide-react"
 import { InputGroup, InputGroupAddon, InputGroupInput } from "./../components/ui/input-group"
 import { useEffect, useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
+import { axiosPrivate } from "@/lib/axios"
 
 interface ItemType {
   id: number;
   name: string;
   price: number;
-  image: string;
+  image_url: string;
 }
 
 interface CartItemType extends ItemType {
   quantity: number;
 }
-
-const models: ItemType[] = [
-  {
-    id: 1,
-    name: "Cheese Burger",
-    price: 10000,
-    image: "burger.png",
-  },
-  {
-    id: 2,
-    name: "Beef Burger",
-    price: 12000,
-    image: "burger.png",
-  },
-  {
-    id: 3,
-    name: "Chicken Burger",
-    price: 9000,
-    image: "burger.png",
-  },
-]
 
 export default function Cashier() {
   const [items, setItems] = useState<ItemType[]>([])
@@ -50,12 +30,19 @@ export default function Cashier() {
   const [loading, setLoading] = useState<boolean>(false)
 
   useEffect(() => {
-    try {
-      setLoading(true)
-    } finally {
-      setItems(models)
-      setLoading(false)
+    const getData = async () => {
+      try {
+        setLoading(true)
+        const products = await axiosPrivate.get(`/products`);
+        console.log(products)
+        setItems(products.data.data);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false)
+      }
     }
+    getData();
   }, [])
 
   const filteredItems: ItemType[] = items.filter((item) =>
@@ -117,7 +104,7 @@ export default function Cashier() {
           <Item key={model.id} className="bg-white transition-all hover:shadow-md cursor-pointer" onClick={() => addToCart(model)}>
             <ItemHeader>
               <img
-                src={model.image}
+                src={model.image_url}
                 alt={model.name}
                 className="rounded-sm object-cover"
               />

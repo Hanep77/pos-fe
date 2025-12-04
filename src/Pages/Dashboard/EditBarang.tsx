@@ -1,0 +1,103 @@
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
+import { axiosPrivate } from "@/lib/axios";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router";
+
+export default function EditBarang() {
+  const { id } = useParams();
+  const [name, setName] = useState("");
+  const [price, setPrice] = useState(0);
+  const [stock, setStock] = useState(0);
+  const [image, setImage] = useState<File | null>(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [description, setDescription] = useState("");
+  const [isActive, setIsActive] = useState(true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const getProduct = async () => {
+      try {
+        const response = await axiosPrivate.get(`/products/${id}`);
+        const product = response.data.data;
+        console.log(product)
+        setName(product.name);
+        setPrice(product.price);
+        setStock(product.stock);
+        setImageUrl(product.image_url);
+        setDescription(product.description);
+        setIsActive(product.is_active);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    getProduct();
+  }, [id]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const formData = new FormData();
+    formData.append("name", name);
+    formData.append("price", String(price));
+    formData.append("stock", String(stock));
+    if (image) {
+      formData.append("image", image);
+    }
+    formData.append("description", description);
+    formData.append("is_active", String(isActive));
+    formData.append("_method", "PUT");
+    formData.append("image_url", String(imageUrl));
+
+    try {
+      await axiosPrivate.put(`/products/${id}`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      navigate("/dashboard/barang");
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold text-gray-800">Edit Barang</h1>
+      </div>
+
+      <div className="bg-white rounded-xl shadow-md p-6">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="name">Nama Barang</Label>
+            <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Masukkan nama barang" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="price">Harga</Label>
+            <Input id="price" type="number" value={price} onChange={(e) => setPrice(Number(e.target.value))} placeholder="Masukkan harga" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="stock">Stok</Label>
+            <Input id="stock" type="number" value={stock} onChange={(e) => setStock(Number(e.target.value))} placeholder="Masukkan stok" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="image">Gambar</Label>
+            {imageUrl && <img src={imageUrl} alt={name} className="h-32 object-cover rounded-md my-2" />}
+            <Input id="image" type="file" onChange={(e) => setImage(e.target.files?.[0] || null)} />
+          </div>
+          <div className="flex items-center space-x-2">
+            <Switch id="is_active" checked={isActive} onCheckedChange={setIsActive} />
+            <Label htmlFor="is_active">Aktif</Label>
+          </div>
+          <div className="flex justify-end gap-4">
+            <Button type="button" variant="outline" onClick={() => navigate("/dashboard/barang")}>Batal</Button>
+            <Button type="submit">Simpan</Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}

@@ -12,6 +12,8 @@ import KelolaPelanggan from './Pages/Dashboard/KelolaPelanggan'
 import LaporanPenjualan from './Pages/Dashboard/LaporanPenjualan'
 import Cashier from './Pages/Cashier'
 import { UserContextProvider } from './context/userContext'
+import TambahBarang from './Pages/Dashboard/TambahBarang'
+import EditBarang from './Pages/Dashboard/EditBarang'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -21,6 +23,8 @@ createRoot(document.getElementById('root')!).render(
           <Route element={<AuthLayout />}>
             <Route path='/dashboard' element={<AdminDashboard />} />
             <Route path='/dashboard/barang' element={<KelolaBarang />} />
+            <Route path='/dashboard/barang/tambah' element={<TambahBarang />} />
+            <Route path='/dashboard/barang/edit/:id' element={<EditBarang />} />
             <Route path='/dashboard/users' element={<KelolaUser />} />
             <Route path='/dashboard/pelanggan' element={<KelolaPelanggan />} />
             <Route path='/dashboard/laporan-penjualan' element={<LaporanPenjualan />} />

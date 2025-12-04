@@ -1,46 +1,71 @@
+import { axiosPrivate } from "@/lib/axios";
 import { Plus } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Link } from "react-router";
+import { Button } from "@/components/ui/button";
 
-const inventoryItems = [
-  {
-    id: 1,
-    name: "Beras 5kg",
-    stock: 5,
-    price: 55000,
-  },
-  {
-    id: 2,
-    name: "Minyak Goreng 1L",
-    stock: 12,
-    price: 18000,
-  },
-  {
-    id: 3,
-    name: "Gula Pasir 1kg",
-    stock: 8,
-    price: 12500,
-  },
-  {
-    id: 4,
-    name: "Telur Ayam",
-    stock: 24,
-    price: 25000,
-  },
-  {
-    id: 5,
-    name: "Ayam Potong",
-    stock: 15,
-    price: 35000,
-  },
-];
+type ProductType = {
+  id: string,
+  image_url: string,
+  is_active: boolean,
+  name: string,
+  price: number,
+  stock: number
+}
+
+type PaginationType = {
+  current_page: number,
+  per_page: number,
+  total_pages: number
+}
 
 export default function KelolaBarang() {
+  const [items, setItems] = useState<ProductType[] | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [pagination, setPagination] = useState<PaginationType | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  useEffect(() => {
+    const getData = async () => {
+      try {
+        const products = await axiosPrivate.get(`/products?search=${searchQuery}&page=${currentPage}`);
+        console.log(products)
+        setItems(products.data.data);
+        setPagination(products.data.pagination);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    const timer = setTimeout(() => {
+      getData();
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery, currentPage])
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (window.confirm("Are you sure you want to delete this item?")) {
+      try {
+        await axiosPrivate.delete(`/products/${id}`);
+        setItems(items?.filter((item) => item.id !== id) || null);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+  };
+
   return <div className="space-y-6">
     <div className="flex justify-between items-center mb-6">
       <h1 className="text-2xl font-bold text-gray-800">Kelola Barang</h1>
-      <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2">
+      <Link to="/dashboard/barang/tambah" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2">
         <Plus size={20} />
         <span>Tambah Barang</span>
-      </button>
+      </Link>
     </div>
 
     {/* Search and Filter */}
@@ -50,8 +75,8 @@ export default function KelolaBarang() {
           <input
             type="text"
             placeholder="Cari barang..."
-            // value={searchTerm}
-            // onChange={(e) => setSearchTerm(e.target.value)}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             className="w-96 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
@@ -79,45 +104,80 @@ export default function KelolaBarang() {
                 Harga
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Status
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Aksi
               </th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {inventoryItems
-              .map((item) => (
-                <tr key={item.id}>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">
-                      {item.name}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${item.stock <= 5
-                        ? "bg-red-100 text-red-800"
-                        : "bg-green-100 text-green-800"
-                        }`}
-                    >
-                      {item.stock}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    Rp {item.price.toLocaleString()}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <button className="text-indigo-600 hover:text-indigo-900 mr-4">
-                      Edit
-                    </button>
-                    <button className="text-red-600 hover:text-red-900">
-                      Hapus
-                    </button>
-                  </td>
-                </tr>
-              ))}
+            {items?.map((item) => (
+              <tr key={item.id}>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm font-medium text-gray-900">
+                    {item.name}
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <span
+                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${item.stock <= 5
+                      ? "bg-red-100 text-red-800"
+                      : "bg-green-100 text-green-800"
+                      }`}
+                  >
+                    {item.stock}
+                  </span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  Rp {item.price.toLocaleString()}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <span
+                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${item.is_active
+                      ? "bg-green-100 text-green-800"
+                      : "bg-red-100 text-red-800"
+                      }`}
+                  >
+                    {item.is_active ? "active" : "non-active"}
+                  </span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                  <Link to={`/dashboard/barang/edit/${item.id}`} className="text-indigo-600 hover:text-indigo-900 mr-4">
+                    Edit
+                  </Link>
+                  <button onClick={() => handleDelete(item.id)} className="text-red-600 hover:text-red-900">
+                    Hapus
+                  </button>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
+      {pagination && <div className="p-4 flex justify-end items-center gap-4">
+        <span className="text-sm text-gray-700">
+          Page {pagination.current_page} of {pagination.total_pages}
+        </span>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handlePageChange(pagination.current_page - 1)}
+            disabled={pagination.current_page === 1}
+          >
+            Previous
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handlePageChange(pagination.current_page + 1)}
+            disabled={pagination.current_page === pagination.total_pages}
+          >
+            Next
+          </Button>
+        </div>
+      </div>}
     </div>
   </div>
 }
