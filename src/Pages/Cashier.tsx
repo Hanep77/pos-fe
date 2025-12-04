@@ -13,6 +13,10 @@ import { Button } from "@/components/ui/button"
 import { axiosPrivate } from "@/lib/axios"
 import { useUserContext } from "@/context/userContext"
 import { useNavigate } from "react-router"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Label } from "@/components/ui/label"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Input } from "@/components/ui/input"
 
 interface ItemType {
   id: number;
@@ -22,7 +26,12 @@ interface ItemType {
 }
 
 interface CartItemType extends ItemType {
-  quantity: number;
+  qty: number;
+}
+
+interface Customer {
+  id: number;
+  name: string;
 }
 
 export default function Cashier() {
@@ -32,16 +41,30 @@ export default function Cashier() {
   const { setToken, user, setUser } = useUserContext();
   const navigate = useNavigate();
   const [loading, setLoading] = useState<boolean>(false)
+  const [loadingPayment, setLoadingPayment] = useState<boolean>(false)
+
+  // New states for payment and customer
+  const [paymentMethod, setPaymentMethod] = useState("cash")
+  const [customers, setCustomers] = useState<Customer[]>([])
+  const [customerType, setCustomerType] = useState("existing")
+  const [selectedCustomer, setSelectedCustomer] = useState<string | undefined>()
+  const [newCustomerName, setNewCustomerName] = useState("")
+
 
   useEffect(() => {
     const getData = async () => {
       try {
         setLoading(true)
-        const products = await axiosPrivate.get(`/products-active`);
-        console.log(products)
-        setItems(products.data.data);
+        const productsPromise = axiosPrivate.get(`/products-active`);
+        const customersPromise = axiosPrivate.get('/customers');
+
+        const [productsRes, customersRes] = await Promise.all([productsPromise, customersPromise]);
+
+        setItems(productsRes.data.data);
+        setCustomers(customersRes.data.data);
       } catch (error) {
         console.error(error);
+        // TODO: Add user-facing error handling
       } finally {
         setLoading(false)
       }
@@ -65,31 +88,63 @@ export default function Cashier() {
       if (existingItem) {
         return prevCart.map((cartItem) =>
           cartItem.id === item.id
-            ? { ...cartItem, quantity: cartItem.quantity + 1 }
+            ? { ...cartItem, qty: cartItem.qty + 1 }
             : cartItem
         )
       }
-      return [...prevCart, { ...item, quantity: 1 }]
+      return [...prevCart, { ...item, qty: 1 }]
     })
   }
 
   const removeFromCart = (item: ItemType) => {
     setCart((prevCart) => {
       const existingItem = prevCart.find((cartItem) => cartItem.id === item.id)
-      if (existingItem && existingItem.quantity === 1) {
+      if (existingItem && existingItem.qty === 1) {
         return prevCart.filter((cartItem) => cartItem.id !== item.id)
       }
       return prevCart.map((cartItem) =>
         cartItem.id === item.id
-          ? { ...cartItem, quantity: cartItem.quantity - 1 }
+          ? { ...cartItem, qty: cartItem.qty - 1 }
           : cartItem
       )
     })
   }
 
   const total: number = useMemo(() => {
-    return cart.reduce((acc, item) => acc + item.price * item.quantity, 0)
+    return cart.reduce((acc, item) => acc + item.price * item.qty, 0)
   }, [cart])
+
+  const handleBayar = async () => {
+    if (customerType === 'new' && newCustomerName.trim() === "") {
+      alert("Silakan masukkan nama pelanggan baru.");
+      return;
+    }
+
+    const payload = {
+      items: cart.map(item => ({ id_product: item.id, qty: item.qty })),
+      payment_method: paymentMethod,
+      id_customer: customerType === 'existing' ? selectedCustomer : null,
+    };
+
+    console.log(JSON.stringify(payload));
+
+    try {
+      setLoadingPayment(true);
+      await axiosPrivate.post('/cashier/transactions', payload);
+      alert("Transaksi berhasil!");
+      // Reset state
+      setCart([]);
+      setSelectedCustomer(undefined);
+      setNewCustomerName("");
+      setPaymentMethod("cash");
+    } catch (error) {
+      console.error("Payment failed", error);
+      alert("Transaksi gagal. Silakan coba lagi.");
+    } finally {
+      setLoadingPayment(false);
+    }
+  }
+
 
   return <div className="relative grid grid-cols-3 gap-4 min-h-screen max-w-screen-xl m-auto">
     <div className="flex w-full flex-col gap-4 col-span-2">
@@ -149,18 +204,70 @@ export default function Cashier() {
             </div>
             <div className="flex items-center gap-2">
               <Button variant="outline" size="sm" onClick={() => removeFromCart(item)}>-</Button>
-              <p>{item.quantity}</p>
+              <p>{item.qty}</p>
               <Button variant="outline" size="sm" onClick={() => addToCart(item)}>+</Button>
             </div>
           </div>
         ))}
       </div>
       {cart.length > 0 && <div className="flex flex-col gap-4 pt-4 border-t">
-        <div className="flex justify-between">
+        <div className="grid gap-4">
+          {/* Customer Selection */}
+          <div className="grid gap-2">
+            <Label>Pelanggan</Label>
+            <RadioGroup defaultValue="existing" value={customerType} onValueChange={setCustomerType} className="flex">
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="existing" id="r1" />
+                <Label htmlFor="r1">Sudah Ada</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="new" id="r2" />
+                <Label htmlFor="r2">Baru</Label>
+              </div>
+            </RadioGroup>
+            {customerType === 'existing' ? (
+              <Select value={selectedCustomer} onValueChange={setSelectedCustomer}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Pilih pelanggan" />
+                </SelectTrigger>
+                <SelectContent>
+                  {customers.map(customer => (
+                    <SelectItem key={customer.id} value={String(customer.id)}>{customer.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <Input
+                placeholder="Masukkan nama pelanggan baru"
+                value={newCustomerName}
+                onChange={(e) => setNewCustomerName(e.target.value)}
+              />
+            )}
+          </div>
+
+          {/* Payment Method */}
+          <div className="grid gap-2">
+            <Label htmlFor="payment-method">Metode Pembayaran</Label>
+            <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+              <SelectTrigger id="payment-method">
+                <SelectValue placeholder="Pilih metode pembayaran" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="cash">Cash</SelectItem>
+                <SelectItem value="qris">QRIS</SelectItem>
+                <SelectItem value="credit">Credit</SelectItem>
+                <SelectItem value="debit">Debit</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <div className="flex justify-between mt-4">
           <p className="font-medium">Total</p>
           <p className="font-medium">Rp {total.toLocaleString()}</p>
         </div>
-        <Button>Bayar</Button>
+        <Button onClick={handleBayar} disabled={loadingPayment}>
+          {loadingPayment ? "Memproses..." : "Bayar"}
+        </Button>
       </div>}
     </div>
   </div>

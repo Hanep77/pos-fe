@@ -1,4 +1,4 @@
-import { axiosClient, axiosPrivate } from "@/lib/axios";
+import { axiosPrivate } from "@/lib/axios";
 import { DollarSign, Package, User, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
