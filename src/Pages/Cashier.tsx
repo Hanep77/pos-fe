@@ -6,11 +6,13 @@ import {
   ItemHeader,
   ItemTitle,
 } from "@/components/ui/item"
-import { LayoutDashboard, SearchIcon, ShoppingCart } from "lucide-react"
+import { LayoutDashboard, LogOut, SearchIcon, ShoppingCart } from "lucide-react"
 import { InputGroup, InputGroupAddon, InputGroupInput } from "./../components/ui/input-group"
 import { useEffect, useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { axiosPrivate } from "@/lib/axios"
+import { useUserContext } from "@/context/userContext"
+import { useNavigate } from "react-router"
 
 interface ItemType {
   id: number;
@@ -27,13 +29,15 @@ export default function Cashier() {
   const [items, setItems] = useState<ItemType[]>([])
   const [cart, setCart] = useState<CartItemType[]>([])
   const [searchQuery, setSearchQuery] = useState<string>("")
+  const { setToken, user, setUser } = useUserContext();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState<boolean>(false)
 
   useEffect(() => {
     const getData = async () => {
       try {
         setLoading(true)
-        const products = await axiosPrivate.get(`/products`);
+        const products = await axiosPrivate.get(`/products-active`);
         console.log(products)
         setItems(products.data.data);
       } catch (error) {
@@ -44,6 +48,12 @@ export default function Cashier() {
     }
     getData();
   }, [])
+
+  const handleLogout = () => {
+    setToken(null);
+    setUser(null);
+    navigate("/login");
+  }
 
   const filteredItems: ItemType[] = items.filter((item) =>
     item.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -84,7 +94,16 @@ export default function Cashier() {
   return <div className="relative grid grid-cols-3 gap-4 min-h-screen max-w-screen-xl m-auto">
     <div className="flex w-full flex-col gap-4 col-span-2">
       <header className="h-16 flex items-center justify-between">
-        <a href="/dashboard" className="flex gap-2"><LayoutDashboard /> Ke Dashboard</a>
+        {user?.role == "admin" ?
+          <a href="/dashboard" className="flex gap-2"><LayoutDashboard /> Ke Dashboard</a> :
+          <button
+            onClick={handleLogout}
+            className="flex items-center px-2 py-2 text-sm font-medium rounded-lg hover:bg-gray-300 transition-colors cursor-pointer"
+          >
+            <LogOut size={20} className="mr-3" />
+            Logout
+          </button>
+        }
         <div>
           <InputGroup>
             <InputGroupInput

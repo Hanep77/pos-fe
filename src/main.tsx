@@ -14,6 +14,8 @@ import Cashier from './Pages/Cashier'
 import { UserContextProvider } from './context/userContext'
 import TambahBarang from './Pages/Dashboard/TambahBarang'
 import EditBarang from './Pages/Dashboard/EditBarang'
+import TambahUser from './Pages/Dashboard/TambahUser'
+import EditUser from './Pages/Dashboard/EditUser'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -26,6 +28,8 @@ createRoot(document.getElementById('root')!).render(
             <Route path='/dashboard/barang/tambah' element={<TambahBarang />} />
             <Route path='/dashboard/barang/edit/:id' element={<EditBarang />} />
             <Route path='/dashboard/users' element={<KelolaUser />} />
+            <Route path='/dashboard/users/tambah' element={<TambahUser />} />
+            <Route path='/dashboard/users/edit/:id' element={<EditUser />} />
             <Route path='/dashboard/pelanggan' element={<KelolaPelanggan />} />
             <Route path='/dashboard/laporan-penjualan' element={<LaporanPenjualan />} />
             <Route path='/kasir' element={<Cashier />} />

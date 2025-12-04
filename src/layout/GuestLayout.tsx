@@ -7,6 +7,9 @@ export default function GuestLayout() {
   if (user?.role == "admin") {
     return <Navigate to={"/dashboard"} />
   }
+  if (user?.role == "cashier") {
+    return <Navigate to={"/kasir"} />
+  }
 
   return <Outlet />
 }
