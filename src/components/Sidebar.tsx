@@ -1,5 +1,6 @@
+import { useUserContext } from "@/context/userContext";
 import { Calculator, FileText, Home, LogOut, Package, ShoppingCart, User, Users } from "lucide-react";
-import { Link, useLocation } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router";
 
 const adminMenus = [
   {
@@ -32,6 +33,14 @@ const adminMenus = [
 export default function Sidebar() {
   const sidebarOpen = true;
   const { pathname } = useLocation();
+  const { setToken, setUser } = useUserContext();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    setToken(null);
+    setUser(null);
+    navigate("/login");
+  }
 
   return <div
     className="fixed left-0 top-0 h-screen transition-all duration-300 bg-gray-200 w-64">
@@ -71,7 +80,7 @@ export default function Sidebar() {
 
       <div className="px-2">
         <button
-          // onClick={handleLogout}
+          onClick={handleLogout}
           className="flex items-center w-full px-2 py-2 text-sm font-medium rounded-lg hover:bg-gray-300 transition-colors cursor-pointer"
         >
           <LogOut size={20} className="mr-3" />

@@ -1,16 +1,16 @@
 import Sidebar from "@/components/Sidebar";
 import { Navigate, Outlet, useLocation } from "react-router";
-// import { useUserContext } from "../context/userContext";
+import { useUserContext } from "../context/userContext";
 
 export default function AuthLayout() {
-  // const { token } = useUserContext()
+  const { token } = useUserContext()
   const { pathname } = useLocation();
   const activeUser = "admin";
   const sidebarOpen = true;
 
-  // if (!token) {
-  //   return <Navigate to={"/login"} />
-  // }
+  if (!token) {
+    return <Navigate to={"/login"} />
+  }
 
   if (!pathname.startsWith("/dashboard")) {
     return <Outlet />

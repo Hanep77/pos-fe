@@ -11,23 +11,26 @@ import KelolaUser from './Pages/Dashboard/KelolaUser'
 import KelolaPelanggan from './Pages/Dashboard/KelolaPelanggan'
 import LaporanPenjualan from './Pages/Dashboard/LaporanPenjualan'
 import Cashier from './Pages/Cashier'
+import { UserContextProvider } from './context/userContext'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <BrowserRouter>
-      <Routes>
-        <Route element={<AuthLayout />}>
-          <Route path='/dashboard' element={<AdminDashboard />} />
-          <Route path='/dashboard/barang' element={<KelolaBarang />} />
-          <Route path='/dashboard/users' element={<KelolaUser />} />
-          <Route path='/dashboard/pelanggan' element={<KelolaPelanggan />} />
-          <Route path='/dashboard/laporan-penjualan' element={<LaporanPenjualan />} />
-          <Route path='/kasir' element={<Cashier />} />
-        </Route>
-        <Route element={<GuestLayout />}>
-          <Route path='/login' element={<Login />} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
+    <UserContextProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route element={<AuthLayout />}>
+            <Route path='/dashboard' element={<AdminDashboard />} />
+            <Route path='/dashboard/barang' element={<KelolaBarang />} />
+            <Route path='/dashboard/users' element={<KelolaUser />} />
+            <Route path='/dashboard/pelanggan' element={<KelolaPelanggan />} />
+            <Route path='/dashboard/laporan-penjualan' element={<LaporanPenjualan />} />
+            <Route path='/kasir' element={<Cashier />} />
+          </Route>
+          <Route element={<GuestLayout />}>
+            <Route path='/login' element={<Login />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </UserContextProvider>
   </StrictMode>,
 )

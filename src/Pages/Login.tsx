@@ -1,8 +1,38 @@
+import { useUserContext } from "@/context/userContext";
+import { axiosClient } from "@/lib/axios";
 import { Lock, Mail } from "lucide-react";
+import { useState, type FormEvent } from "react";
 
 export default function Login() {
-  const handleLogin = () => {
+  const { setUser, setToken } = useUserContext();
+  const [loading, setLoading] = useState(false);
 
+  const handleLogin = async (e: FormEvent) => {
+    e.preventDefault()
+
+    const formData = new FormData(e.target as HTMLFormElement);
+
+    const data = {
+      username: formData.get("username"),
+      password: formData.get("password"),
+    } as Record<string, string>;
+
+    setLoading(true);
+    await axiosClient.post("/auth/login", data)
+      .then(response => {
+        console.log(response);
+        if (response.status == 200) {
+          setUser(response.data.data)
+          setToken(response.data.credentials)
+        }
+      })
+      .catch(error => {
+        if (error.status == 401) {
+          alert("email atau password salah")
+        }
+      }).finally(() => {
+        setLoading(false);
+      })
   }
 
   return <div className="min-h-screen flex items-center justify-center p-4">
@@ -15,20 +45,13 @@ export default function Login() {
 
       {/* Login Form */}
       <div className="p-8">
-        {/* {loginError && ( */}
-        {/*   <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-lg flex items-center"> */}
-        {/*     <AlertTriangle size={20} className="mr-2 flex-shrink-0" /> */}
-        {/*     <span>{loginError}</span> */}
-        {/*   </div> */}
-        {/* )} */}
-
         <form onSubmit={handleLogin} className="space-y-6">
           <div>
             <label
               htmlFor="email"
               className="block text-sm font-medium text-gray-700 mb-2"
             >
-              Email
+              Username
             </label>
             <div className="relative">
               <Mail
@@ -36,11 +59,12 @@ export default function Login() {
                 size={20}
               />
               <input
-                id="email"
-                type="email"
+                id="username"
+                type="text"
+                name="username"
                 required
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Masukkan email Anda"
+                placeholder="Masukkan username Anda"
               />
             </div>
           </div>
@@ -60,6 +84,7 @@ export default function Login() {
               <input
                 id="password"
                 type="password"
+                name="password"
                 required
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Masukkan password Anda"
@@ -84,7 +109,7 @@ export default function Login() {
             type="submit"
             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center cursor-pointer"
           >
-            Login
+            {loading ? "loading" : "Login"}
           </button>
         </form>
       </div>

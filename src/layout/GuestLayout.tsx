@@ -1,12 +1,12 @@
 import { Navigate, Outlet } from "react-router";
-// import { useUserContext } from "../context/userContext";
+import { useUserContext } from "../context/userContext";
 
 export default function GuestLayout() {
-  // const { token } = useUserContext()
+  const { user } = useUserContext()
 
-  // if (token) {
-  //   return <Navigate to={"/"} />
-  // }
-  //
+  if (user?.role == "admin") {
+    return <Navigate to={"/dashboard"} />
+  }
+
   return <Outlet />
 }

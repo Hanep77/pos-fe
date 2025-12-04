@@ -1,4 +1,6 @@
+import { axiosClient, axiosPrivate } from "@/lib/axios";
 import { DollarSign, Package, User, Users } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 const adminDashboardData = [
@@ -29,6 +31,24 @@ const stats = [
 ];
 
 export default function AdminDashboard() {
+  const [totalBarang, setTotalBarang] = useState(0);
+  const [totalUsers, setTotalUsers] = useState(0);
+  const [totalPelanggan, setTotalPelanggan] = useState(0);
+
+  useEffect(() => {
+    const getData = async () => {
+      const totalProducts = await axiosPrivate.get("/products/count");
+      setTotalBarang(totalProducts.data.data)
+
+      const totalUsers = await axiosPrivate.get("/users/count");
+      setTotalUsers(totalUsers.data.data)
+
+      const totalPelanggan = await axiosPrivate.get("/customers/count");
+      setTotalUsers(totalPelanggan.data.data)
+    }
+    getData()
+  })
+
   return <div className="space-y-6">
     <div className="flex justify-between items-center mb-6">
       <h1 className="text-2xl font-bold text-gray-800">Dashboard Admin</h1>
@@ -54,7 +74,22 @@ export default function AdminDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm opacity-80">{stat.title}</p>
-              <p className="text-2xl font-bold">{stat.value}</p>
+              {
+                stat.title == "Total Barang" &&
+                <p className="text-2xl font-bold">{totalBarang}</p>
+              }
+              {
+                stat.title == "Total User" &&
+                <p className="text-2xl font-bold">{totalUsers}</p>
+              }
+              {
+                stat.title == "Total Pelanggan" &&
+                <p className="text-2xl font-bold">{totalPelanggan}</p>
+              }
+              {
+                stat.title == "Penjualan Hari Ini" &&
+                <p className="text-2xl font-bold">{totalBarang}</p>
+              }
             </div>
             <stat.icon size={40} />
           </div>
