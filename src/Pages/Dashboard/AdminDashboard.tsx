@@ -3,15 +3,47 @@ import { DollarSign, Package, User, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
-const adminDashboardData = [
-  { name: "Senin", sales: 4000 },
-  { name: "Selasa", sales: 3000 },
-  { name: "Rabu", sales: 5000 },
-  { name: "Kamis", sales: 2780 },
-  { name: "Jumat", sales: 6000 },
-  { name: "Sabtu", sales: 4890 },
-  { name: "Minggu", sales: 3500 },
-];
+const getDatesForFilter = (filterType: string) => {
+  const today = new Date();
+  let start = new Date();
+  let end = new Date();
+
+  const formatDate = (date: Date) => {
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = (d.getMonth() + 1).toString().padStart(2, '0');
+    const day = d.getDate().toString().padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  switch (filterType) {
+    case "today":
+      end.setDate(today.getDate() + today.getDay() + 1); // Sunday of current week
+      break; // start and end are already today
+    case "week":
+      start.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1)); // Monday of current week
+      end.setDate(today.getDate() - today.getDay() + 7); // Sunday of current week
+      break;
+    case "month":
+      start = new Date(today.getFullYear(), today.getMonth(), 1);
+      end = new Date(today.getFullYear(), today.getMonth() + 1, 0); // Last day of current month
+      break;
+    case "year":
+      start = new Date(today.getFullYear(), 0, 1);
+      end = new Date(today.getFullYear(), 11, 31); // Last day of current year
+      break;
+    case "all":
+      // For "all time", we might just not pass start_at and end_at to the API
+      // or use a very distant past date. For now, let's keep it simple
+      // and assume the API handles it if dates are omitted or null.
+      // For the purpose of providing values, let's set a very old start date.
+      start = new Date(2000, 0, 1); // A reasonable arbitrary start
+      end = today;
+      break;
+  }
+  console.log(`getDatesForFilter: ${filterType} -> Start: ${formatDate(start)}, End: ${formatDate(end)}`);
+  return { start: formatDate(start), end: formatDate(end) };
+};
 
 const stats = [
   { title: "Total Barang", value: 124, icon: Package, color: "bg-blue-500" },
@@ -30,24 +62,56 @@ const stats = [
   },
 ];
 
+type SalesType = {
+  name: string,
+  sales: number,
+}
+
 export default function AdminDashboard() {
   const [totalBarang, setTotalBarang] = useState(0);
   const [totalUsers, setTotalUsers] = useState(0);
   const [totalPelanggan, setTotalPelanggan] = useState(0);
+  const [salesData, setSalesData] = useState<SalesType[]>([]);
+  const [selectedFilter, setSelectedFilter] = useState("week");
+  const initialDates = getDatesForFilter(selectedFilter);
+  const [startAt, setStartAt] = useState(initialDates.start);
+  const [endAt, setEndAt] = useState(initialDates.end);
+
+  const handleFilterChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const newFilter = event.target.value;
+    setSelectedFilter(newFilter);
+    const { start, end } = getDatesForFilter(newFilter);
+    setStartAt(start);
+    setEndAt(end);
+  };
 
   useEffect(() => {
     const getData = async () => {
-      const totalProducts = await axiosPrivate.get("/products/count");
-      setTotalBarang(totalProducts.data.data)
+      try {
+        const totalProducts = await axiosPrivate.get("/products/count");
+        setTotalBarang(totalProducts.data.data)
 
-      const totalUsers = await axiosPrivate.get("/users/count");
-      setTotalUsers(totalUsers.data.data)
+        const totalUsers = await axiosPrivate.get("/users/count");
+        setTotalUsers(totalUsers.data.data)
 
-      const totalPelanggan = await axiosPrivate.get("/customers/count");
-      setTotalPelanggan(totalPelanggan.data.data)
+        const totalPelanggan = await axiosPrivate.get("/customers/count");
+        setTotalPelanggan(totalPelanggan.data.data)
+
+        if (startAt && endAt) {
+          const salesSummary = await axiosPrivate.get(`/list-sales?start_at=${startAt}&end_at=${endAt}`);
+          console.log("Sales Summary Data:", salesSummary.data); // Added log
+          setSalesData(salesSummary.data.data);
+        } else if (selectedFilter === "all") {
+          const salesSummary = await axiosPrivate.get(`/list-sales`); // Fetch all sales if "all" is selected
+          console.log("Sales Summary Data (All):", salesSummary.data); // Added log
+          setSalesData(salesSummary.data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+      }
     }
-    getData()
-  })
+    getData();
+  }, [startAt, endAt, selectedFilter]);
 
   return <div className="space-y-6">
     <div className="flex justify-between items-center mb-6">
@@ -55,11 +119,14 @@ export default function AdminDashboard() {
       <div className="flex space-x-4">
         <select
           className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          value={selectedFilter}
+          onChange={handleFilterChange}
         >
           <option value="today">Hari Ini</option>
           <option value="week">Minggu Ini</option>
           <option value="month">Bulan Ini</option>
-          <option value="all">Semua Waktu</option>
+          <option value="year">Tahun Ini</option>
+          {/* <option value="all">Semua Waktu</option> */}
         </select>
       </div>
     </div>
@@ -102,7 +169,7 @@ export default function AdminDashboard() {
       <h2 className="text-xl font-semibold mb-4">Statistik Penjualan</h2>
       <div className="h-80">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={adminDashboardData}>
+          <BarChart data={salesData}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="name" />
             <YAxis />
