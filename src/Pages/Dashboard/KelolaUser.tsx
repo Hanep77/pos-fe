@@ -32,12 +32,7 @@ export default function KelolaUser() {
         console.error(error);
       }
     };
-
-    const timer = setTimeout(() => {
-      getUsers();
-    }, 500);
-
-    return () => clearTimeout(timer);
+    getUsers();
   }, [searchQuery, currentPage]);
 
   const handlePageChange = (page: number) => {

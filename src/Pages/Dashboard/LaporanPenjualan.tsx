@@ -1,55 +1,52 @@
 import { FileText } from "lucide-react";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import type { PaginationType } from "./KelolaBarang";
+import { useEffect, useState } from "react";
+import { axiosPrivate } from "@/lib/axios";
+import { Button } from "@/components/ui/button";
 
-const adminDashboardData = [
-  { name: "Senin", sales: 4000 },
-  { name: "Selasa", sales: 3000 },
-  { name: "Rabu", sales: 5000 },
-  { name: "Kamis", sales: 2780 },
-  { name: "Jumat", sales: 6000 },
-  { name: "Sabtu", sales: 4890 },
-  { name: "Minggu", sales: 3500 },
-];
+type TransactionType = {
+  id: string,
+  date: string,
+  total: number,
+  payment_method: string,
+  payment_status: string,
+  customer_name: string,
+}
 
-const salesReports = [
-  {
-    date: "2023-11-01",
-    customer: "Andi Pratama",
-    product: "Beras 5kg",
-    quantity: 2,
-    total: 110000,
-  },
-  {
-    date: "2023-11-01",
-    customer: "Siti Rahma",
-    product: "Minyak Goreng 1L",
-    quantity: 1,
-    total: 18000,
-  },
-  {
-    date: "2023-11-02",
-    customer: "Budi Santoso",
-    product: "Gula Pasir 1kg",
-    quantity: 3,
-    total: 37500,
-  },
-  {
-    date: "2023-11-02",
-    customer: "Dewi Lestari",
-    product: "Beras 5kg",
-    quantity: 1,
-    total: 55000,
-  },
-  {
-    date: "2023-11-03",
-    customer: "Ahmad Fauzi",
-    product: "Minyak Goreng 1L",
-    quantity: 2,
-    total: 36000,
-  },
-];
+type SalesType = {
+  name: string,
+  sales: number,
+}
 
 export default function LaporanPenjualan() {
+  const [transactions, setTransactions] = useState<TransactionType[] | null>(null);
+  const [sales, setSales] = useState<SalesType[] | null>(null);
+  console.log(sales);
+  const [startAt, setStartAt] = useState("2025-12-01");
+  const [endAt, setEndAt] = useState("2025-12-06");
+  const [pagination, setPagination] = useState<PaginationType | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  useEffect(() => {
+    const getData = async () => {
+      try {
+        const products = await axiosPrivate.get(`/transactions?start_at=${startAt}&end_at=${endAt}&page=${currentPage}`);
+        setTransactions(products.data.data);
+        const sales = await axiosPrivate.get(`/list-sales?start_at=${startAt}&end_at=${endAt}`);
+        setSales(sales.data.data);
+        setPagination(products.data.pagination);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+    getData();
+  }, [startAt, endAt, currentPage]);
+
   return <div className="p-6 space-y-6">
     <div className="flex justify-between items-center mb-6">
       <h1 className="text-2xl font-bold text-gray-800">Laporan Penjualan</h1>
@@ -71,6 +68,8 @@ export default function LaporanPenjualan() {
           <input
             type="date"
             className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={startAt}
+            onChange={(e) => setStartAt(e.target.value)}
           />
         </div>
         <div className="flex-1">
@@ -80,30 +79,32 @@ export default function LaporanPenjualan() {
           <input
             type="date"
             className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={endAt}
+            onChange={(e) => setEndAt(e.target.value)}
           />
         </div>
-        <div className="flex-1">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Pelanggan
-          </label>
-          <select className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <option>Semua Pelanggan</option>
-            <option>Andi Pratama</option>
-            <option>Siti Rahma</option>
-            <option>Budi Santoso</option>
-          </select>
-        </div>
-        <div className="flex-1">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Produk
-          </label>
-          <select className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <option>Semua Produk</option>
-            <option>Beras 5kg</option>
-            <option>Minyak Goreng 1L</option>
-            <option>Gula Pasir 1kg</option>
-          </select>
-        </div>
+        {/* <div className="flex-1"> */}
+        {/*   <label className="block text-sm font-medium text-gray-700 mb-1"> */}
+        {/*     Pelanggan */}
+        {/*   </label> */}
+        {/*   <select className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"> */}
+        {/*     <option>Semua Pelanggan</option> */}
+        {/*     <option>Andi Pratama</option> */}
+        {/*     <option>Siti Rahma</option> */}
+        {/*     <option>Budi Santoso</option> */}
+        {/*   </select> */}
+        {/* </div> */}
+        {/* <div className="flex-1"> */}
+        {/*   <label className="block text-sm font-medium text-gray-700 mb-1"> */}
+        {/*     Produk */}
+        {/*   </label> */}
+        {/*   <select className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"> */}
+        {/*     <option>Semua Produk</option> */}
+        {/*     <option>Beras 5kg</option> */}
+        {/*     <option>Minyak Goreng 1L</option> */}
+        {/*     <option>Gula Pasir 1kg</option> */}
+        {/*   </select> */}
+        {/* </div> */}
       </div>
     </div>
 
@@ -112,7 +113,7 @@ export default function LaporanPenjualan() {
       <h2 className="text-xl font-semibold mb-4">Tren Penjualan</h2>
       <div className="h-80">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={adminDashboardData}>
+          <LineChart data={sales ? sales : []}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="name" />
             <YAxis />
@@ -152,28 +153,51 @@ export default function LaporanPenjualan() {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {salesReports.map((report) => (
-              <tr key={report.date}>
+            {transactions?.map((item) => (
+              <tr key={item.id}>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {report.date}
+                  {item.date}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {report.customer}
+                  {item.customer_name}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {report.product}
+                  {item.payment_method}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {report.quantity}
+                  {item.payment_status}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  Rp {report.total.toLocaleString()}
+                  Rp {item.total.toLocaleString()}
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+      {pagination && <div className="p-4 flex justify-end items-center gap-4">
+        <span className="text-sm text-gray-700">
+          Page {pagination.current_page} of {pagination.total_pages}
+        </span>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handlePageChange(pagination.current_page - 1)}
+            disabled={pagination.current_page === 1}
+          >
+            Previous
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handlePageChange(pagination.current_page + 1)}
+            disabled={pagination.current_page === pagination.total_pages}
+          >
+            Next
+          </Button>
+        </div>
+      </div>}
     </div>
   </div>
 }

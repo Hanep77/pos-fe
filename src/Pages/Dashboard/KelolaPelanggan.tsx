@@ -34,11 +34,7 @@ export default function KelolaPelanggan() {
       }
     };
 
-    const timer = setTimeout(() => {
-      getCustomers();
-    }, 500);
-
-    return () => clearTimeout(timer);
+    getCustomers();
   }, [searchQuery, currentPage]);
 
   const handlePageChange = (page: number) => {

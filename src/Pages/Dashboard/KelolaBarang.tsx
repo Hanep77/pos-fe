@@ -13,7 +13,7 @@ type ProductType = {
   stock: number
 }
 
-type PaginationType = {
+export type PaginationType = {
   current_page: number,
   per_page: number,
   total_pages: number
@@ -36,12 +36,7 @@ export default function KelolaBarang() {
         console.error(error);
       }
     }
-
-    const timer = setTimeout(() => {
-      getData();
-    }, 500);
-
-    return () => clearTimeout(timer);
+    getData();
   }, [searchQuery, currentPage])
 
   const handlePageChange = (page: number) => {
