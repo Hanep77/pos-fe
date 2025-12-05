@@ -4,6 +4,7 @@ import type { PaginationType } from "./KelolaBarang";
 import { useEffect, useState } from "react";
 import { axiosPrivate } from "@/lib/axios";
 import { Button } from "@/components/ui/button";
+import * as XLSX from 'xlsx';
 
 type TransactionType = {
   id: string,
@@ -47,11 +48,31 @@ export default function LaporanPenjualan() {
     getData();
   }, [startAt, endAt, currentPage]);
 
+  const handleExportExcel = () => {
+    if (!transactions || transactions.length === 0) {
+      alert("No transaction data to export.");
+      return;
+    }
+
+    const data = transactions.map(t => ({
+      Tanggal: t.date,
+      Pelanggan: t.customer_name,
+      "Metode Pembayaran": t.payment_method,
+      "Status Pembayaran": t.payment_status,
+      Total: t.total,
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Laporan Penjualan");
+    XLSX.writeFile(wb, `laporan_penjualan_${startAt}_${endAt}.xlsx`);
+  };
+
   return <div className="p-6 space-y-6">
     <div className="flex justify-between items-center mb-6">
       <h1 className="text-2xl font-bold text-gray-800">Laporan Penjualan</h1>
       <div className="flex space-x-4">
-        <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2">
+        <button onClick={handleExportExcel} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2">
           <FileText size={20} />
           <span>Ekspor Excel</span>
         </button>
