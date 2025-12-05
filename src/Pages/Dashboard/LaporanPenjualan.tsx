@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { axiosPrivate } from "@/lib/axios";
 import { Button } from "@/components/ui/button";
 import * as XLSX from 'xlsx';
+import { Link } from 'react-router-dom';
 
 type TransactionType = {
   id: string,
@@ -171,6 +172,9 @@ export default function LaporanPenjualan() {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Total
               </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Aksi
+              </th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -190,6 +194,11 @@ export default function LaporanPenjualan() {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   Rp {item.total.toLocaleString()}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                  <Link to={`/transactions/${item.id}/details`} className="text-indigo-600 hover:text-indigo-900">
+                    Detail Transaksi
+                  </Link>
                 </td>
               </tr>
             ))}

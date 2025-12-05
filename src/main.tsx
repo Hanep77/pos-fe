@@ -18,6 +18,7 @@ import TambahUser from './Pages/Dashboard/TambahUser'
 import EditUser from './Pages/Dashboard/EditUser'
 import TambahPelanggan from './Pages/Dashboard/TambahPelanggan'
 import EditPelanggan from './Pages/Dashboard/EditPelanggan'
+import TransactionDetail from './Pages/Dashboard/TransactionDetail'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -36,6 +37,7 @@ createRoot(document.getElementById('root')!).render(
             <Route path='/dashboard/pelanggan/tambah' element={<TambahPelanggan />} />
             <Route path='/dashboard/pelanggan/edit/:id' element={<EditPelanggan />} />
             <Route path='/dashboard/laporan-penjualan' element={<LaporanPenjualan />} />
+            <Route path='/transactions/:id/details' element={<TransactionDetail />} />
             <Route path='/kasir' element={<Cashier />} />
           </Route>
           <Route element={<GuestLayout />}>
