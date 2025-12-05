@@ -18,8 +18,8 @@ const getDatesForFilter = (filterType: string) => {
 
   switch (filterType) {
     case "today":
-      end.setDate(today.getDate() + today.getDay() + 1); // Sunday of current week
-      break; // start and end are already today
+      end.setDate(today.getDate() + today.getDay() + 1);
+      break;
     case "week":
       start.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1)); // Monday of current week
       end.setDate(today.getDate() - today.getDay() + 7); // Sunday of current week
@@ -55,7 +55,7 @@ const stats = [
     color: "bg-purple-500",
   },
   {
-    title: "Penjualan Hari Ini",
+    title: "Total Penjualan",
     value: "Rp 15.240.000",
     icon: DollarSign,
     color: "bg-yellow-500",
@@ -72,6 +72,7 @@ export default function AdminDashboard() {
   const [totalUsers, setTotalUsers] = useState(0);
   const [totalPelanggan, setTotalPelanggan] = useState(0);
   const [salesData, setSalesData] = useState<SalesType[]>([]);
+  const [totalSales, setTotalSales] = useState(0);
   const [selectedFilter, setSelectedFilter] = useState("week");
   const initialDates = getDatesForFilter(selectedFilter);
   const [startAt, setStartAt] = useState(initialDates.start);
@@ -101,10 +102,14 @@ export default function AdminDashboard() {
           const salesSummary = await axiosPrivate.get(`/list-sales?start_at=${startAt}&end_at=${endAt}`);
           console.log("Sales Summary Data:", salesSummary.data); // Added log
           setSalesData(salesSummary.data.data);
-        } else if (selectedFilter === "all") {
-          const salesSummary = await axiosPrivate.get(`/list-sales`); // Fetch all sales if "all" is selected
+          const sumSales = salesSummary.data.data.reduce((sum: number, item: SalesType) => sum + item.sales, 0);
+          setTotalSales(sumSales);
+        } else if (selectedFilter === "all") { // If "all" is selected, fetch all sales without date parameters
+          const salesSummary = await axiosPrivate.get(`/list-sales`);
           console.log("Sales Summary Data (All):", salesSummary.data); // Added log
           setSalesData(salesSummary.data.data);
+          const sumSales = salesSummary.data.data.reduce((sum: number, item: SalesType) => sum + item.sales, 0);
+          setTotalSales(sumSales);
         }
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
@@ -126,7 +131,7 @@ export default function AdminDashboard() {
           <option value="week">Minggu Ini</option>
           <option value="month">Bulan Ini</option>
           <option value="year">Tahun Ini</option>
-          {/* <option value="all">Semua Waktu</option> */}
+          <option value="all">Semua Waktu</option>
         </select>
       </div>
     </div>
@@ -140,7 +145,7 @@ export default function AdminDashboard() {
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm opacity-80">{stat.title}</p>
+              <p className="text-sm opacity-80">Total Penjualan</p>
               {
                 stat.title == "Total Barang" &&
                 <p className="text-2xl font-bold">{totalBarang}</p>
@@ -154,8 +159,8 @@ export default function AdminDashboard() {
                 <p className="text-2xl font-bold">{totalPelanggan}</p>
               }
               {
-                stat.title == "Penjualan Hari Ini" &&
-                <p className="text-2xl font-bold">{totalBarang}</p>
+                stat.title == "Total Penjualan" &&
+                <p className="text-2xl font-bold">Rp {totalSales.toLocaleString()}</p>
               }
             </div>
             <stat.icon size={40} />
