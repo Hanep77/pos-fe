@@ -3,7 +3,7 @@ import { Navigate, Outlet, useLocation } from "react-router";
 import { useUserContext } from "../context/userContext";
 
 export default function AuthLayout() {
-  const { token, user } = useUserContext();
+  const { user } = useUserContext();
   const { pathname } = useLocation();
   const activeUser = "admin";
   const sidebarOpen = true;
@@ -12,9 +12,9 @@ export default function AuthLayout() {
     return <Navigate to={"/kasir"} />
   }
 
-  if (!token) {
-    return <Navigate to={"/login"} />
-  }
+  // if (!token) {
+  //   return <Navigate to={"/login"} />
+  // }
 
   if (!pathname.startsWith("/dashboard")) {
     return <Outlet />

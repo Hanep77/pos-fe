@@ -1,5 +1,5 @@
 import { useUserContext } from "@/context/userContext";
-import { Calculator, FileText, Home, LogOut, Package, ShoppingCart, User, Users } from "lucide-react";
+import { Calculator, FileText, Home, LogOut, Package, User, Users } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router";
 
 const adminMenus = [
